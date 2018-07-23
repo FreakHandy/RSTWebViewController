@@ -361,24 +361,24 @@ internal extension RSTWebViewController {
     
     //MARK: Dismissal
     
-    func dismissWebViewController(_ sender: UIBarButtonItem)
+    @objc func dismissWebViewController(_ sender: UIBarButtonItem)
     {
         self.parent?.dismiss(animated: true, completion: nil)
     }
     
     //MARK: Toolbar Items
     
-    func goBack(_ button: UIBarButtonItem)
+    @objc func goBack(_ button: UIBarButtonItem)
     {
         self.webView.goBack()
     }
     
-    func goForward(_ button: UIBarButtonItem)
+    @objc func goForward(_ button: UIBarButtonItem)
     {
         self.webView.goForward()
     }
     
-    func refresh(_ button: UIBarButtonItem)
+    @objc func refresh(_ button: UIBarButtonItem)
     {
         if self.webView.isLoading
         {
@@ -398,7 +398,7 @@ internal extension RSTWebViewController {
         }
     }
     
-    func shareLink(_ button: UIBarButtonItem)
+    @objc func shareLink(_ button: UIBarButtonItem)
     {
         //TODO:- fix force unwrapped URL
         guard let url = self.webView.url else {

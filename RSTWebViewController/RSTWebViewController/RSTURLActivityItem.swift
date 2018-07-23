@@ -61,9 +61,9 @@ internal class RSTURLActivityItem: NSObject, UIActivityItemSource
         return self.URL
     }
     
-    func activityViewController(_ activityViewController: UIActivityViewController, itemForActivityType activityType: UIActivityType) -> Any?
+    func activityViewController(_ activityViewController: UIActivityViewController, itemForActivityType activityType: UIActivityType?) -> Any?
     {
-        if let item: AnyObject = self.itemDictionary?[activityType]
+        if let item: AnyObject = self.itemDictionary?[activityType!]
         {
             return item
         }
@@ -72,7 +72,7 @@ internal class RSTURLActivityItem: NSObject, UIActivityItemSource
         let extensionActivityTypes: [UIActivityType] = [UIActivityType.postToTwitter, UIActivityType.postToFacebook, UIActivityType.postToWeibo, UIActivityType.postToFlickr, UIActivityType.postToVimeo, UIActivityType.postToTencentWeibo]
         let applicationActivityTypes: [UIActivityType] = [UIActivityType(rawValue: RSTActivityTypeSafari), UIActivityType(rawValue: RSTActivityTypeChrome)]
         
-        if self.title != nil && !applicationActivityTypes.contains(activityType) && (!activityType.rawValue.lowercased().hasPrefix("com.apple") || extensionActivityTypes.contains(activityType))
+        if self.title != nil && !applicationActivityTypes.contains(activityType!) && (!(activityType?.rawValue.lowercased().hasPrefix("com.apple"))! || extensionActivityTypes.contains(activityType!))
         {
             let item = NSExtensionItem()
             
