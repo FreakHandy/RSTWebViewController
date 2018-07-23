@@ -12,13 +12,13 @@ import MobileCoreServices
 internal extension RSTURLActivityItem
 {
     // Set an item to be provided for the given activityType
-    func setItem(item: AnyObject?, forActivityType activityType: String)
+    func setItem(_ item: AnyObject?, forActivityType activityType: UIActivityType)
     {
         if let item: AnyObject = item
         {
             if self.itemDictionary == nil
             {
-                self.itemDictionary = [String: NSExtensionItem]()
+                self.itemDictionary = [UIActivityType: NSExtensionItem]()
             }
             
             self.itemDictionary![activityType] = item
@@ -35,7 +35,7 @@ internal extension RSTURLActivityItem
     }
     
     // Returns item that will be provided for the given activityType
-    func itemForActivityType(activityType: String) -> AnyObject?
+    func itemForActivityType(_ activityType: UIActivityType) -> AnyObject?
     {
         return self.itemDictionary?[activityType]
     }
@@ -44,34 +44,35 @@ internal extension RSTURLActivityItem
 internal class RSTURLActivityItem: NSObject, UIActivityItemSource
 {
     internal var title: String?
-    internal var URL: NSURL
+    internal var URL: Foundation.URL
     internal var typeIdentifier = kUTTypeURL
     
-    private var itemDictionary: [String: AnyObject]?
+    fileprivate var itemDictionary: [UIActivityType: AnyObject]?
     
-    init(URL: NSURL)
+    init(URL: Foundation.URL)
     {
         self.URL = URL
         
         super.init()
     }
     
-    func activityViewControllerPlaceholderItem(activityViewController: UIActivityViewController) -> AnyObject
+    func activityViewControllerPlaceholderItem(_ activityViewController: UIActivityViewController) -> Any
     {
         return self.URL
     }
     
-    func activityViewController(activityViewController: UIActivityViewController, itemForActivityType activityType: String) -> AnyObject?
+    func activityViewController(_ activityViewController: UIActivityViewController, itemForActivityType activityType: UIActivityType) -> Any?
     {
         if let item: AnyObject = self.itemDictionary?[activityType]
         {
             return item
         }
         
-        let extensionActivityTypes: [String] = [UIActivityTypePostToTwitter, UIActivityTypePostToFacebook, UIActivityTypePostToWeibo, UIActivityTypePostToFlickr, UIActivityTypePostToVimeo, UIActivityTypePostToTencentWeibo]
-        let applicationActivityTypes: [String] = [RSTActivityTypeSafari, RSTActivityTypeChrome]
+//        let extensionActivityTypes: [UIActivityType] = []
+        let extensionActivityTypes: [UIActivityType] = [UIActivityType.postToTwitter, UIActivityType.postToFacebook, UIActivityType.postToWeibo, UIActivityType.postToFlickr, UIActivityType.postToVimeo, UIActivityType.postToTencentWeibo]
+        let applicationActivityTypes: [UIActivityType] = [UIActivityType(rawValue: RSTActivityTypeSafari), UIActivityType(rawValue: RSTActivityTypeChrome)]
         
-        if self.title != nil && !contains(applicationActivityTypes, activityType) && (!activityType.lowercaseString.hasPrefix("com.apple") || contains(extensionActivityTypes, activityType))
+        if self.title != nil && !applicationActivityTypes.contains(activityType) && (!activityType.rawValue.lowercased().hasPrefix("com.apple") || extensionActivityTypes.contains(activityType))
         {
             let item = NSExtensionItem()
             
@@ -81,7 +82,7 @@ internal class RSTURLActivityItem: NSObject, UIActivityItemSource
             item.attributedTitle = NSAttributedString(string: self.title!)
             item.attributedContentText = item.attributedTitle
             
-            item.attachments = [NSItemProvider(item: self.URL, typeIdentifier: kUTTypeURL as String)]
+            item.attachments = [NSItemProvider(item: self.URL as NSSecureCoding, typeIdentifier: kUTTypeURL as String)]
             
             return item
         }
@@ -89,12 +90,12 @@ internal class RSTURLActivityItem: NSObject, UIActivityItemSource
         return self.URL
     }
     
-    func activityViewController(activityViewController: UIActivityViewController, subjectForActivityType activityType: String?) -> String
+    func activityViewController(_ activityViewController: UIActivityViewController, subjectForActivityType activityType: UIActivityType?) -> String
     {
         return self.title ?? ""
     }
     
-    func activityViewController(activityViewController: UIActivityViewController, dataTypeIdentifierForActivityType activityType: String?) -> String
+    func activityViewController(_ activityViewController: UIActivityViewController, dataTypeIdentifierForActivityType activityType: UIActivityType?) -> String
     {
         return self.typeIdentifier as String
     }

@@ -15,7 +15,7 @@ public extension RSTWebViewController {
     
     func updateToolbarItems()
     {
-        if self.webView.loading
+        if self.webView.isLoading
         {
             self.refreshButton = self.stopLoadingButton
         }
@@ -26,24 +26,24 @@ public extension RSTWebViewController {
         
         if self.showsDoneButton && self.doneButton == nil
         {
-            self.doneButton = UIBarButtonItem(barButtonSystemItem: .Done, target: self, action: "dismissWebViewController:")
+            self.doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(RSTWebViewController.dismissWebViewController(_:)))
         }
         else if !self.showsDoneButton && self.doneButton != nil
         {
             self.doneButton = nil
         }
         
-        self.backButton.enabled = self.webView.canGoBack
-        self.forwardButton.enabled = self.webView.canGoForward
+        self.backButton.isEnabled = self.webView.canGoBack
+        self.forwardButton.isEnabled = self.webView.canGoForward
         
-        if self.traitCollection.horizontalSizeClass == .Regular
+        if self.traitCollection.horizontalSizeClass == .regular
         {
             self.toolbarItems = nil
             
-            let fixedSpaceItem = UIBarButtonItem(barButtonSystemItem: .FixedSpace, target: nil, action: nil)
+            let fixedSpaceItem = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
             fixedSpaceItem.width = 20.0
             
-            let reloadButtonFixedSpaceItem = UIBarButtonItem(barButtonSystemItem: .FixedSpace, target: nil, action: nil)
+            let reloadButtonFixedSpaceItem = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
             reloadButtonFixedSpaceItem.width = fixedSpaceItem.width
             
             if self.refreshButton == self.stopLoadingButton
@@ -55,8 +55,8 @@ public extension RSTWebViewController {
             
             if self.showsDoneButton
             {
-                items.insert(fixedSpaceItem, atIndex: 0)
-                items.insert(self.doneButton!, atIndex: 0)
+                items.insert(fixedSpaceItem, at: 0)
+                items.insert(self.doneButton!, at: 0)
             }
             
             self.navigationItem.rightBarButtonItems = items
@@ -66,60 +66,60 @@ public extension RSTWebViewController {
             // We have to set rightBarButtonItems instead of simply rightBarButtonItem to properly clear previous buttons
             self.navigationItem.rightBarButtonItems = self.showsDoneButton ? [self.doneButton!] : nil
             
-            let flexibleSpaceItem = UIBarButtonItem(barButtonSystemItem: .FlexibleSpace, target: nil, action: nil)
+            let flexibleSpaceItem = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
             self.toolbarItems = [self.backButton, flexibleSpaceItem, self.forwardButton, flexibleSpaceItem, self.refreshButton, flexibleSpaceItem, self.shareButton]
         }
     }
     
 }
 
-public class RSTWebViewController: UIViewController {
+open class RSTWebViewController: UIViewController {
     
     //MARK: Public Properties
     
     // WKWebView used to display webpages
-    public private(set) var webView: WKWebView
+    open fileprivate(set) var webView: WKWebView
     
     // UIBarButton items. Customizable, and subclasses can override updateToolbarItems() to arrange them however they want
-    public var backButton: UIBarButtonItem = UIBarButtonItem(image: nil, style: .Plain, target: nil, action: "goBack:")
-    public var forwardButton: UIBarButtonItem = UIBarButtonItem(image: nil, style: .Plain, target: nil, action: "goForward:")
-    public var shareButton: UIBarButtonItem = UIBarButtonItem(barButtonSystemItem: .Action, target: nil, action: "shareLink:")
+    open var backButton: UIBarButtonItem = UIBarButtonItem(image: nil, style: .plain, target: nil, action: #selector(RSTWebViewController.goBack(_:)))
+    open var forwardButton: UIBarButtonItem = UIBarButtonItem(image: nil, style: .plain, target: nil, action: #selector(RSTWebViewController.goForward(_:)))
+    open var shareButton: UIBarButtonItem = UIBarButtonItem(barButtonSystemItem: .action, target: nil, action: #selector(RSTWebViewController.shareLink(_:)))
     
-    public var reloadButton: UIBarButtonItem = UIBarButtonItem(barButtonSystemItem: .Refresh, target: nil, action: "refresh:")
-    public var stopLoadingButton: UIBarButtonItem = UIBarButtonItem(barButtonSystemItem: .Stop, target: nil, action: "refresh:")
+    open var reloadButton: UIBarButtonItem = UIBarButtonItem(barButtonSystemItem: .refresh, target: nil, action: #selector(RSTWebViewController.refresh(_:)))
+    open var stopLoadingButton: UIBarButtonItem = UIBarButtonItem(barButtonSystemItem: .stop, target: nil, action: #selector(RSTWebViewController.refresh(_:)))
     
-    public var doneButton: UIBarButtonItem?
+    open var doneButton: UIBarButtonItem?
     
     // Set to true when presenting modally to show a Done button that'll dismiss itself.
-    public var showsDoneButton: Bool = false {
+    open var showsDoneButton: Bool = false {
         didSet {
             self.updateToolbarItems()
         }
     }
     
     // Array of activity types that should not be displayed in the UIActivityViewController share sheet
-    public var excludedActivityTypes: [String]?
+    open var excludedActivityTypes: [String]?
     
     // Array of application-specific UIActivities to handle sharing links via UIActivityViewController
-    public var applicationActivities: [UIActivity]?
+    open var applicationActivities: [UIActivity]?
     
     
     //MARK: Private Properties
     
-    private let initialReqest: NSURLRequest?
-    private let progressView = UIProgressView()
-    private var ignoreUpdateProgress: Bool = false
-    private var refreshButton: UIBarButtonItem
+    fileprivate let initialReqest: URLRequest?
+    fileprivate let progressView = UIProgressView()
+    fileprivate var ignoreUpdateProgress: Bool = false
+    fileprivate var refreshButton: UIBarButtonItem
     
     
     //MARK: Initializers
     
-    public required init(request: NSURLRequest?)
+    public required init(request: URLRequest?)
     {
         self.initialReqest = request
         
         let configuration = WKWebViewConfiguration()
-        self.webView = WKWebView(frame: CGRectZero, configuration: configuration)
+        self.webView = WKWebView(frame: CGRect.zero, configuration: configuration)
         
         self.refreshButton = self.reloadButton
         
@@ -128,11 +128,11 @@ public class RSTWebViewController: UIViewController {
         self.initialize()
     }
     
-    public convenience init (URL: NSURL?)
+    public convenience init (URL: Foundation.URL?)
     {
         if let URL = URL
         {
-            self.init(request: NSURLRequest(URL: URL))
+            self.init(request: URLRequest(url: URL))
         }
         else
         {
@@ -144,7 +144,7 @@ public class RSTWebViewController: UIViewController {
     {
         if let address = address
         {
-            self.init(URL: NSURL(string: address))
+            self.init(URL: URL(string: address))
         }
         else
         {
@@ -152,27 +152,26 @@ public class RSTWebViewController: UIViewController {
         }
     }
     
-    public required init(coder: NSCoder)
-    {
+    public required init?(coder aDecoder: NSCoder) {
         let configuration = WKWebViewConfiguration()
-        self.webView = WKWebView(frame: CGRectZero, configuration: configuration)
+        self.webView = WKWebView(frame: CGRect.zero, configuration: configuration)
         
         self.refreshButton = self.reloadButton
         
         self.initialReqest = nil
         
-        super.init(coder: coder)
+        super.init(coder: aDecoder)
         
         self.initialize()
     }
     
-    private func initialize()
+    fileprivate func initialize()
     {
-        self.progressView.progressViewStyle = .Bar
-        self.progressView.autoresizingMask = .FlexibleWidth | .FlexibleTopMargin
+        self.progressView.progressViewStyle = .bar
+        self.progressView.autoresizingMask = [.flexibleWidth, .flexibleTopMargin]
         self.progressView.progress = 0.5
         self.progressView.alpha = 0.0
-        self.progressView.hidden = true
+        self.progressView.isHidden = true
         
         self.backButton.target = self
         self.forwardButton.target = self
@@ -180,9 +179,11 @@ public class RSTWebViewController: UIViewController {
         self.stopLoadingButton.target = self
         self.shareButton.target = self
         
-        let bundle = NSBundle(forClass: RSTWebViewController.self)
-        self.backButton.image = UIImage(named: "back_button", inBundle: bundle, compatibleWithTraitCollection: nil)
-        self.forwardButton.image = UIImage(named: "forward_button", inBundle: bundle, compatibleWithTraitCollection: nil)
+        let bundle = Bundle(for: RSTWebViewController.self)
+        self.backButton.image = UIImage(named: "back_button", in: bundle, compatibleWith: nil)
+        self.forwardButton.image = UIImage(named: "forward_button", in: bundle, compatibleWith: nil)
+        
+        self.webView.addObserver(self, forKeyPath: "url", options: [], context: RSTWebViewControllerContext)
     }
     
     deinit
@@ -193,45 +194,45 @@ public class RSTWebViewController: UIViewController {
     
     //MARK: UIViewController
     
-    public override func loadView()
+    open override func loadView()
     {
         self.startKeyValueObserving()
         
         if let request = self.initialReqest
         {
-            self.webView.loadRequest(request)
+            self.webView.load(request)
         }
         
         self.view = self.webView
     }
 
-    public override func viewDidLoad()
+    open override func viewDidLoad()
     {
         super.viewDidLoad()
         
         self.updateToolbarItems()
     }
     
-    public override func viewWillAppear(animated: Bool)
+    open override func viewWillAppear(_ animated: Bool)
     {
         super.viewWillAppear(animated)
         
         if self.webView.estimatedProgress < 1.0
         {
-            self.transitionCoordinator()?.animateAlongsideTransition( { (context) in
+            self.transitionCoordinator?.animate(alongsideTransition: { (context) in
                 
                 self.showProgressBar(animated: true)
                 
-                }) { (context) in
-                    
-                    if context.isCancelled()
-                    {
-                        self.hideProgressBar(animated: false)
-                    }
-            }
+            }, completion: { (context) in
+                
+                if context.isCancelled
+                {
+                    self.hideProgressBar(animated: false)
+                }
+            })
         }
         
-        if self.traitCollection.horizontalSizeClass == .Regular
+        if self.traitCollection.horizontalSizeClass == .regular
         {
             self.navigationController?.setToolbarHidden(true, animated: false)
         }
@@ -243,13 +244,13 @@ public class RSTWebViewController: UIViewController {
         self.updateToolbarItems()
     }
     
-    public override func viewWillDisappear(animated: Bool)
+    open override func viewWillDisappear(_ animated: Bool)
     {
         super.viewDidDisappear(animated)
         
         var shouldHideToolbarItems = true
         
-        if let toolbarItems = self.navigationController?.topViewController.toolbarItems
+        if let toolbarItems = self.navigationController?.topViewController?.toolbarItems
         {
             if toolbarItems.count > 0
             {
@@ -262,20 +263,20 @@ public class RSTWebViewController: UIViewController {
             self.navigationController?.setToolbarHidden(true, animated: false)
         }
         
-        self.transitionCoordinator()?.animateAlongsideTransition( { (context) in
+        self.transitionCoordinator?.animate(alongsideTransition: { (context) in
             
             self.hideProgressBar(animated: true)
             
-            }) { (context) in
+        }, completion: { (context) in
                 
-                if context.isCancelled() && self.webView.estimatedProgress < 1.0
+                if context.isCancelled && self.webView.estimatedProgress < 1.0
                 {
                     self.showProgressBar(animated: false)
                 }
-        }
+        })
     }
     
-    public override func didMoveToParentViewController(parent: UIViewController?)
+    open override func didMove(toParentViewController parent: UIViewController?)
     {
         if parent == nil
         {
@@ -283,20 +284,20 @@ public class RSTWebViewController: UIViewController {
         }
     }
 
-    public override func didReceiveMemoryWarning()
+    open override func didReceiveMemoryWarning()
     {
         super.didReceiveMemoryWarning()
     }
     
     //MARK: Layout
     
-    public override func willTransitionToTraitCollection(newCollection: UITraitCollection, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator)
+    open override func willTransition(to newCollection: UITraitCollection, with coordinator: UIViewControllerTransitionCoordinator)
     {
-        super.willTransitionToTraitCollection(newCollection, withTransitionCoordinator: coordinator)
+        super.willTransition(to: newCollection, with: coordinator)
         
-        coordinator.animateAlongsideTransition({ (context) in
+        coordinator.animate(alongsideTransition: { (context) in
             
-            if self.traitCollection.horizontalSizeClass == .Regular
+            if self.traitCollection.horizontalSizeClass == .regular
             {
                 self.navigationController?.setToolbarHidden(true, animated: true)
             }
@@ -308,7 +309,7 @@ public class RSTWebViewController: UIViewController {
             }, completion: nil)
     }
     
-    public override func traitCollectionDidChange(previousTraitCollection: UITraitCollection?)
+    open override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?)
     {
         super.traitCollectionDidChange(previousTraitCollection)
         
@@ -317,12 +318,15 @@ public class RSTWebViewController: UIViewController {
     
     //MARK: KVO
     
-    public override func observeValueForKeyPath(keyPath: String, ofObject object: AnyObject, change: [NSObject : AnyObject], context: UnsafeMutablePointer<()>)
+    open override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?)
     {
         if context == RSTWebViewControllerContext
         {
             let webView = (object as! WKWebView)
-            
+            guard let keyPath = keyPath else {
+                print("Empty KVO keypath")
+                return
+            }
             switch keyPath
             {
             case "title":
@@ -332,18 +336,21 @@ public class RSTWebViewController: UIViewController {
                 self.updateProgress(Float(webView.estimatedProgress))
                 
             case "loading":
-                self.updateLoadingStatus(status: webView.loading)
+                self.updateLoadingStatus(status: webView.isLoading)
                 
             case "canGoBack", "canGoForward":
                 self.updateToolbarItems()
                 
+            case "url":
+                    self.shareButton.isEnabled = (webView.url != nil)
+                
             default:
-                println("Unknown KVO keypath")
+                print("Unknown KVO keypath")
             }
         }
         else
         {
-            super.observeValueForKeyPath(keyPath, ofObject: object, change: change, context: context)
+            super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
         }
     }
 
@@ -354,35 +361,35 @@ internal extension RSTWebViewController {
     
     //MARK: Dismissal
     
-    func dismissWebViewController(sender: UIBarButtonItem)
+    func dismissWebViewController(_ sender: UIBarButtonItem)
     {
-        self.parentViewController?.dismissViewControllerAnimated(true, completion: nil)
+        self.parent?.dismiss(animated: true, completion: nil)
     }
     
     //MARK: Toolbar Items
     
-    func goBack(button: UIBarButtonItem)
+    func goBack(_ button: UIBarButtonItem)
     {
         self.webView.goBack()
     }
     
-    func goForward(button: UIBarButtonItem)
+    func goForward(_ button: UIBarButtonItem)
     {
         self.webView.goForward()
     }
     
-    func refresh(button: UIBarButtonItem)
+    func refresh(_ button: UIBarButtonItem)
     {
-        if self.webView.loading
+        if self.webView.isLoading
         {
             self.ignoreUpdateProgress = true
             self.webView.stopLoading()
         }
         else
         {
-            if self.webView.URL == nil && self.webView.backForwardList.backList.count == 0 && self.initialReqest != nil
+            if self.webView.url == nil && self.webView.backForwardList.backList.count == 0 && self.initialReqest != nil
             {
-                self.webView.loadRequest(self.initialReqest!)
+                self.webView.load(self.initialReqest!)
             }
             else
             {
@@ -391,12 +398,17 @@ internal extension RSTWebViewController {
         }
     }
     
-    func shareLink(button: UIBarButtonItem)
+    func shareLink(_ button: UIBarButtonItem)
     {
-        let activityItem = RSTURLActivityItem(URL: self.webView.URL ?? NSURL())
+        //TODO:- fix force unwrapped URL
+        guard let url = self.webView.url else {
+            return
+        }
+        
+        let activityItem = RSTURLActivityItem(URL: url)
         activityItem.title = self.webView.title
         
-        if self.excludedActivityTypes == nil || (self.excludedActivityTypes != nil && !contains(self.excludedActivityTypes!, RSTActivityTypeOnePassword))
+        if self.excludedActivityTypes == nil || (self.excludedActivityTypes != nil && !self.excludedActivityTypes!.contains(RSTActivityTypeOnePassword))
         {
             
             #if DEBUG
@@ -404,12 +416,12 @@ internal extension RSTWebViewController {
                 // If UIApplication.rst_sharedApplication() is nil, we are running in an application extension, meaning NSBundle.mainBundle() will return the extension bundle, not the container app's
                 // Because of this, we can't check to see if the Imported UTIs have been added, but since the assert is purely for debugging, it's not that big of an issue
                 
-                if UIApplication.rst_sharedApplication() != nil
+                if UIApplication.rst_shared() != nil
                 {
                     var importedOnePasswordUTI = false
                     var importedURLUTI = false
                     
-                    if let importedUTIs = NSBundle.mainBundle().objectForInfoDictionaryKey("UTImportedTypeDeclarations") as! [[String: AnyObject]]?
+                    if let importedUTIs = Bundle.main.object(forInfoDictionaryKey: "UTImportedTypeDeclarations") as! [[String: AnyObject]]?
                     {
                         for importedUTI in importedUTIs
                         {
@@ -423,7 +435,7 @@ internal extension RSTWebViewController {
                             {
                                 let UTIs = importedUTI["UTTypeConformsTo"] as! [String]
                                 
-                                if contains(UTIs, "org.appextension.fill-webview-action") && contains(UTIs, "public.url")
+                                if UTIs.contains("org.appextension.fill-webview-action") && UTIs.contains("public.url")
                                 {
                                     importedURLUTI = true
                                     break
@@ -443,17 +455,17 @@ internal extension RSTWebViewController {
             #endif
             
             
-            let onePasswordURLScheme = NSURL(string: "org-appextension-feature-password-management://")
+            let onePasswordURLScheme = URL(string: "org-appextension-feature-password-management://")
             
             // If we're running in an application extension, there is no way to detect if 1Password is installed.
             // Because of this, if UIApplication.rst_sharedApplication() == nil, we'll simply assume it is installed, since there's no harm in doing so
-            if UIApplication.rst_sharedApplication() == nil || (onePasswordURLScheme != nil && UIApplication.rst_sharedApplication().canOpenURL(onePasswordURLScheme!))
+            if UIApplication.rst_shared() == nil || (onePasswordURLScheme != nil && UIApplication.rst_shared().canOpenURL(onePasswordURLScheme!))
             {
-                activityItem.typeIdentifier = "com.rileytestut.RSTWebViewController.url"
+                activityItem.typeIdentifier = "com.rileytestut.RSTWebViewController.url" as CFString
                 
-                RSTOnePasswordExtension.sharedExtension().createExtensionItemForWebView(self.webView, completion: { (extensionItem, error) in
-                    activityItem.setItem(extensionItem, forActivityType: "com.agilebits.onepassword-ios.extension")
-                    activityItem.setItem(extensionItem, forActivityType: "com.agilebits.beta.onepassword-ios.extension")
+                RSTOnePasswordExtension.shared().createExtensionItem(forWebView: self.webView, completion: { (extensionItem, error) in
+                    activityItem.setItem(extensionItem, forActivityType: UIActivityType(rawValue: "com.agilebits.onepassword-ios.extension"))
+                    activityItem.setItem(extensionItem, forActivityType: UIActivityType(rawValue: "com.agilebits.beta.onepassword-ios.extension"))
                     self.presentActivityViewControllerWithItems([activityItem], fromBarButtonItem: button)
                 })
                 
@@ -464,18 +476,18 @@ internal extension RSTWebViewController {
         self.presentActivityViewControllerWithItems([activityItem], fromBarButtonItem: button)
     }
     
-    func presentActivityViewControllerWithItems(activityItems: [AnyObject], fromBarButtonItem barButtonItem: UIBarButtonItem)
+    func presentActivityViewControllerWithItems(_ activityItems: [AnyObject], fromBarButtonItem barButtonItem: UIBarButtonItem)
     {
         var applicationActivities = self.applicationActivities ?? [UIActivity]()
         
         if let excludedActivityTypes = self.excludedActivityTypes
         {
-            if !contains(excludedActivityTypes, RSTActivityTypeSafari)
+            if !excludedActivityTypes.contains(RSTActivityTypeSafari)
             {
                 applicationActivities.append(RSTSafariActivity())
             }
             
-            if !contains(excludedActivityTypes, RSTActivityTypeChrome)
+            if !excludedActivityTypes.contains(RSTActivityTypeChrome)
             {
                 applicationActivities.append(RSTChromeActivity())
             }
@@ -490,16 +502,19 @@ internal extension RSTWebViewController {
         let stopLoadingButtonTintColor = self.stopLoadingButton.tintColor
         
         let activityViewController = UIActivityViewController(activityItems: activityItems, applicationActivities: applicationActivities)
-        activityViewController.excludedActivityTypes = self.excludedActivityTypes
         
-        activityViewController.modalPresentationStyle = .Popover
+        activityViewController.excludedActivityTypes = self.excludedActivityTypes?.map { (activityTypeString) -> UIActivityType in
+            UIActivityType(activityTypeString)
+        }
+        
+        activityViewController.modalPresentationStyle = .popover
         activityViewController.popoverPresentationController?.barButtonItem = barButtonItem
         
         activityViewController.completionWithItemsHandler = { activityType, success, items, error in
             
-            if RSTOnePasswordExtension.sharedExtension().isOnePasswordExtensionActivityType(activityType)
+            if RSTOnePasswordExtension.shared().isOnePasswordExtensionActivityType(activityType.map { $0.rawValue })
             {
-                RSTOnePasswordExtension.sharedExtension().fillReturnedItems(items, intoWebView: self.webView, completion: nil)
+                RSTOnePasswordExtension.shared().fillReturnedItems(items, intoWebView: self.webView, completion: nil)
             }
             
             // Because tint colors aren't properly updated when views aren't in a view hierarchy, we manually fix any erroneous tint colors
@@ -523,11 +538,11 @@ internal extension RSTWebViewController {
             
         }
         
-        self.presentViewController(activityViewController, animated: true, completion: nil)
+        self.present(activityViewController, animated: true, completion: nil)
     }
 }
 
-private let RSTWebViewControllerContext = UnsafeMutablePointer<()>()
+private let RSTWebViewControllerContext: UnsafeMutableRawPointer? = nil
 
 private extension RSTWebViewController {
     
@@ -535,15 +550,16 @@ private extension RSTWebViewController {
     
     func startKeyValueObserving()
     {
-        self.webView.addObserver(self, forKeyPath: "title", options:nil, context: RSTWebViewControllerContext)
-        self.webView.addObserver(self, forKeyPath: "estimatedProgress", options: nil, context: RSTWebViewControllerContext)
-        self.webView.addObserver(self, forKeyPath: "loading", options: nil, context: RSTWebViewControllerContext)
-        self.webView.addObserver(self, forKeyPath: "canGoBack", options: nil, context: RSTWebViewControllerContext)
-        self.webView.addObserver(self, forKeyPath: "canGoForward", options: nil, context: RSTWebViewControllerContext)
+        self.webView.addObserver(self, forKeyPath: "title", options: [], context: RSTWebViewControllerContext)
+        self.webView.addObserver(self, forKeyPath: "estimatedProgress", options: [], context: RSTWebViewControllerContext)
+        self.webView.addObserver(self, forKeyPath: "loading", options: [], context: RSTWebViewControllerContext)
+        self.webView.addObserver(self, forKeyPath: "canGoBack", options: [], context: RSTWebViewControllerContext)
+        self.webView.addObserver(self, forKeyPath: "canGoForward", options: [], context: RSTWebViewControllerContext)
     }
     
     func stopKeyValueObserving()
     {
+        self.webView.removeObserver(self, forKeyPath: "url", context: RSTWebViewControllerContext)
         self.webView.removeObserver(self, forKeyPath: "title", context: RSTWebViewControllerContext)
         self.webView.removeObserver(self, forKeyPath: "estimatedProgress", context: RSTWebViewControllerContext)
         self.webView.removeObserver(self, forKeyPath: "loading", context: RSTWebViewControllerContext)
@@ -553,7 +569,7 @@ private extension RSTWebViewController {
     
     //MARK: Update UI
     
-    func updateTitle(title: String?)
+    func updateTitle(_ title: String?)
     {
         self.title = title
     }
@@ -562,23 +578,23 @@ private extension RSTWebViewController {
     {
         self.updateToolbarItems()
         
-        if let application = UIApplication.rst_sharedApplication()
+        if let application = UIApplication.rst_shared()
         {
             if loading
             {
-                application.networkActivityIndicatorVisible = true
+                application.isNetworkActivityIndicatorVisible = true
             }
             else
             {
-                application.networkActivityIndicatorVisible = false
+                application.isNetworkActivityIndicatorVisible = false
             }
         }
         
     }
     
-    func updateProgress(progress: Float)
+    func updateProgress(_ progress: Float)
     {
-        if self.progressView.hidden
+        if self.progressView.isHidden
         {
             self.showProgressBar(animated: true)
         }
@@ -597,7 +613,7 @@ private extension RSTWebViewController {
         }
         else
         {
-            UIView.animateWithDuration(0.4, animations: {
+            UIView.animate(withDuration: 0.4, animations: {
                 
                 self.progressView.setProgress(progress, animated: true)
                 
@@ -608,7 +624,7 @@ private extension RSTWebViewController {
                         // This delay serves two purposes. One, it keeps the progress bar on screen just a bit longer so it doesn't appear to disappear too quickly.
                         // Two, it allows us to prevent the progress bar from disappearing if the user actually started loading another webpage before the current one finished loading.
                         
-                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64((0.2 * Float(NSEC_PER_SEC)))), dispatch_get_main_queue(), {
+                        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + Double(Int64((0.2 * Float(NSEC_PER_SEC)))) / Double(NSEC_PER_SEC), execute: {
                             
                             if self.webView.estimatedProgress == 1.0
                             {
@@ -622,21 +638,21 @@ private extension RSTWebViewController {
         }
     }
     
-    func showProgressBar(#animated: Bool)
+    func showProgressBar(animated: Bool)
     {
-        let navigationBarBounds = self.navigationController?.navigationBar.bounds ?? CGRectZero
+        let navigationBarBounds = self.navigationController?.navigationBar.bounds ?? CGRect.zero
         self.progressView.frame = CGRect(x: 0, y: navigationBarBounds.height - self.progressView.bounds.height, width: navigationBarBounds.width, height: self.progressView.bounds.height)
         
         self.navigationController?.navigationBar.addSubview(self.progressView)
         
         self.progressView.setProgress(Float(self.webView.estimatedProgress), animated: false)
-        self.progressView.hidden = false
+        self.progressView.isHidden = false
         
         if animated
         {
-            UIView.animateWithDuration(0.4) {
+            UIView.animate(withDuration: 0.4, animations: {
                 self.progressView.alpha = 1.0
-            }
+            }) 
         }
         else
         {
@@ -644,16 +660,16 @@ private extension RSTWebViewController {
         }
     }
     
-    func hideProgressBar(#animated: Bool)
+    func hideProgressBar(animated: Bool)
     {
         if animated
         {
-            UIView.animateWithDuration(0.4, animations: {
+            UIView.animate(withDuration: 0.4, animations: {
                 self.progressView.alpha = 0.0
                 }, completion: { (finished) in
                     
                     self.progressView.setProgress(0.0, animated: false)
-                    self.progressView.hidden = true
+                    self.progressView.isHidden = true
                     self.progressView.removeFromSuperview()
             })
         }
@@ -663,7 +679,7 @@ private extension RSTWebViewController {
             
             // Completion
             self.progressView.setProgress(0.0, animated: false)
-            self.progressView.hidden = true
+            self.progressView.isHidden = true
             self.progressView.removeFromSuperview()
         }
     }

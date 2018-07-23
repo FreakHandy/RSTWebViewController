@@ -10,36 +10,35 @@ import UIKit
 
 internal class RSTSafariActivity: UIActivity {
 
-    private var URL: NSURL?
+    fileprivate var URL: Foundation.URL?
     
-    override class func activityCategory() -> UIActivityCategory
+    override class var activityCategory : UIActivityCategory
     {
-        return .Share
+        return .share
     }
     
-    override func activityType() -> String?
-    {
-        return RSTActivityTypeSafari
+    override var activityType: UIActivityType? {
+        return UIActivityType(rawValue: RSTActivityTypeSafari)
     }
     
-    override func activityTitle() -> String?
+    override var activityTitle : String?
     {
         return NSLocalizedString("Safari", comment: "")
     }
     
-    override func activityImage() -> UIImage?
+    override var activityImage : UIImage?
     {
-        let bundle = NSBundle(forClass: RSTSafariActivity.self)
-        return UIImage(named: "safari_activity", inBundle: bundle, compatibleWithTraitCollection: nil)
+        let bundle = Bundle(for: RSTSafariActivity.self)
+        return UIImage(named: "safari_activity", in: bundle, compatibleWith: nil)
     }
     
-    override func canPerformWithActivityItems(activityItems: [AnyObject]) -> Bool
+    override func canPerform(withActivityItems activityItems: [Any]) -> Bool
     {
-        if let application = UIApplication.rst_sharedApplication()
+        if let application = UIApplication.rst_shared()
         {
-            if let safariURLScheme = NSURL(string: "http://")
+            if let safariURLScheme = Foundation.URL(string: "http://")
             {
-                let activityItem: AnyObject? = self.firstValidActivityItemInActivityItems(activityItems)
+                let activityItem: AnyObject? = self.firstValidActivityItemInActivityItems(activityItems as [AnyObject])
                 
                 if application.canOpenURL(safariURLScheme) && activityItem != nil
                 {
@@ -51,49 +50,49 @@ internal class RSTSafariActivity: UIActivity {
         return false
     }
     
-    override func prepareWithActivityItems(activityItems: [AnyObject])
+    override func prepare(withActivityItems activityItems: [Any])
     {
-        if let activityItem: AnyObject = self.firstValidActivityItemInActivityItems(activityItems)
+        if let activityItem: AnyObject = self.firstValidActivityItemInActivityItems(activityItems as [AnyObject])
         {
             if activityItem is String
             {
-                self.URL = NSURL(string: activityItem as! String)
+                self.URL = Foundation.URL(string: activityItem as! String)
             }
-            else if activityItem is NSURL
+            else if activityItem is Foundation.URL
             {
-                self.URL = activityItem as? NSURL
+                self.URL = activityItem as? Foundation.URL
             }
         }
     }
     
-    override func performActivity()
+    override func perform()
     {
-        let application = UIApplication.rst_sharedApplication()
+        let application = UIApplication.rst_shared()
         
         if self.URL == nil || application == nil
         {
             return self.activityDidFinish(false)
         }
         
-        let finished = application.rst_openURL(self.URL)
-        self.activityDidFinish(finished)
+        let finished = application?.rst_open(self.URL)
+        self.activityDidFinish(finished!)
     }
     
-    func firstValidActivityItemInActivityItems(activityItems: [AnyObject]) -> AnyObject?
+    func firstValidActivityItemInActivityItems(_ activityItems: [AnyObject]) -> AnyObject?
     {
-        if let application = UIApplication.rst_sharedApplication()
+        if let application = UIApplication.rst_shared()
         {
             for activityItem in activityItems
             {
-                var URL: NSURL?
+                var URL: Foundation.URL?
                 
                 if activityItem is String
                 {
-                    URL = NSURL(string: activityItem as! String)
+                    URL = Foundation.URL(string: activityItem as! String)
                 }
-                else if activityItem is NSURL
+                else if activityItem is Foundation.URL
                 {
-                    URL = activityItem as? NSURL
+                    URL = activityItem as? Foundation.URL
                 }
                 
                 if let URL = URL

@@ -10,36 +10,36 @@ import UIKit
 
 internal class RSTChromeActivity: UIActivity {
     
-    private var URL: NSURL?
+    fileprivate var URL: Foundation.URL?
     
-    override class func activityCategory() -> UIActivityCategory
+    override class var activityCategory : UIActivityCategory
     {
-        return .Share
+        return .share
     }
     
-    override func activityType() -> String?
-    {
-        return RSTActivityTypeChrome
+    
+    override var activityType: UIActivityType? {
+        return UIActivityType(rawValue: RSTActivityTypeChrome)
     }
     
-    override func activityTitle() -> String?
+    override var activityTitle : String?
     {
         return NSLocalizedString("Chrome", comment: "")
     }
     
-    override func activityImage() -> UIImage?
+    override var activityImage : UIImage?
     {
-        let bundle = NSBundle(forClass: RSTChromeActivity.self)
-        return UIImage(named: "chrome_activity", inBundle: bundle, compatibleWithTraitCollection: nil)
+        let bundle = Bundle(for: RSTChromeActivity.self)
+        return UIImage(named: "chrome_activity", in: bundle, compatibleWith: nil)
     }
     
-    override func canPerformWithActivityItems(activityItems: [AnyObject]) -> Bool
+    override func canPerform(withActivityItems activityItems: [Any]) -> Bool
     {
-        if let application = UIApplication.rst_sharedApplication()
+        if let application = UIApplication.rst_shared()
         {
-            if let chromeURLScheme = NSURL(string: "googlechrome://")
+            if let chromeURLScheme = Foundation.URL(string: "googlechrome://")
             {
-                let activityItem: AnyObject? = self.firstValidActivityItemInActivityItems(activityItems)
+                let activityItem: AnyObject? = self.firstValidActivityItemInActivityItems(activityItems as [AnyObject])
                 
                 if application.canOpenURL(chromeURLScheme) && activityItem != nil
                 {
@@ -51,33 +51,33 @@ internal class RSTChromeActivity: UIActivity {
         return false
     }
     
-    override func prepareWithActivityItems(activityItems: [AnyObject])
+    override func prepare(withActivityItems activityItems: [Any])
     {
-        if let activityItem: AnyObject = self.firstValidActivityItemInActivityItems(activityItems)
+        if let activityItem: AnyObject = self.firstValidActivityItemInActivityItems(activityItems as [AnyObject])
         {
             if activityItem is String
             {
-                self.URL = NSURL(string: activityItem as! String)
+                self.URL = Foundation.URL(string: activityItem as! String)
             }
-            else if activityItem is NSURL
+            else if activityItem is Foundation.URL
             {
-                self.URL = activityItem as? NSURL
+                self.URL = activityItem as? Foundation.URL
             }
         }
     }
     
-    override func performActivity()
+    override func perform()
     {
-        let application = UIApplication.rst_sharedApplication()
+        let application = UIApplication.rst_shared()
         
         if self.URL == nil || application == nil
         {
             return self.activityDidFinish(false)
         }
         
-        if let components = NSURLComponents(URL: self.URL!, resolvingAgainstBaseURL: false)
+        if var components = URLComponents(url: self.URL!, resolvingAgainstBaseURL: false)
         {
-            let scheme = components.scheme?.lowercaseString
+            let scheme = components.scheme?.lowercased()
             
             if scheme != nil && scheme == "https"
             {
@@ -88,8 +88,8 @@ internal class RSTChromeActivity: UIActivity {
                 components.scheme = "googlechrome"
             }
             
-            let finished = application.rst_openURL(components.URL)
-            self.activityDidFinish(finished)
+            let finished = application?.rst_open(components.url)
+            self.activityDidFinish(finished!)
         }
         else
         {
@@ -97,21 +97,21 @@ internal class RSTChromeActivity: UIActivity {
         }
     }
     
-    func firstValidActivityItemInActivityItems(activityItems: [AnyObject]) -> AnyObject?
+    func firstValidActivityItemInActivityItems(_ activityItems: [AnyObject]) -> AnyObject?
     {
-        if let application = UIApplication.rst_sharedApplication()
+        if let application = UIApplication.rst_shared()
         {
             for activityItem in activityItems
             {
-                var URL: NSURL?
+                var URL: Foundation.URL?
                 
                 if activityItem is String
                 {
-                    URL = NSURL(string: activityItem as! String)
+                    URL = Foundation.URL(string: activityItem as! String)
                 }
-                else if activityItem is NSURL
+                else if activityItem is Foundation.URL
                 {
-                    URL = activityItem as? NSURL
+                    URL = activityItem as? Foundation.URL
                 }
                 
                 if let URL = URL
